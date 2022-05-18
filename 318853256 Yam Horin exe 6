@@ -1,0 +1,57 @@
+# Title:	Filename:
+# Author:	Date:
+# Description:
+# Input:
+# Output:
+################# Data segment #####################
+.data
+martix: .byte 2,7,34,68,56,89,156,122,135,0,33,122,122,66,18,255
+msg :.ascii " \n the opsions are: "
+	.ascii"\n 1. Print metrix unsigned" 
+	.ascii"\n 2. Print metrix sing "
+	.ascii"\n 3. Change a number in the matrix" 
+	.ascii"\n 4. Negate a number in the matrix"
+	.ascii"\n 5. Swap numbers in the matrix"
+	.asciiz "\n 8. END"
+	
+                     ### add your data here ###
+                    
+################# Code segment #####################
+.text
+.globl main
+main:
+#menu #
+li $v0 , 4
+la $a0 , msg
+syscall 
+li $v0 , 5 
+syscall 
+move $a0 , $v0
+beq $a0 , 1 , GoToOpsion1
+beq $a0 , 2 , GoToOpsion2
+beq $a0 , 3 , GoToOpsion3
+beq $a0 , 4 , GoToOpsion4
+beq $a0 , 5 , GoToOpsion5
+GoToOpsion1:
+la $a1 , metrix
+jal print
+
+
+      ### remember: program always has to finish here ###
+li $v0, 10	# Exit program
+syscall
+print:
+li $t2 , 0 #counter for line down
+li $t3 , 0 #counter for metrix total 
+loop:
+beq $t2 , 4, print line
+lb $t1 , 0($a1)
+blt $t1 , 10 , printUntil10 
+blt $t1 , 100 , printUntil100
+printNormal
+move $a0 , $t1
+li $v0 , 1
+syscall
+addi $t1 , 1
+addi $ 
+j loop
