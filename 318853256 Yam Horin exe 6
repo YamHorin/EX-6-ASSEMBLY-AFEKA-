@@ -4,8 +4,13 @@
 # Input:
 # Output:
 ################# Data segment #####################
+פה יש את כל הDATA לכל התוכנית:
 .data
-martix: .byte 2,7,34,68,56,89,156,122,135,0,33,122,122,66,18,255
+
+matrix: .byte 2,7,34,68,56,89,156,122,135,0,33,122,122,66,18,255
+jump_table:.word  case_1,case_2,case_3,case_4,case_5 - זה למעבר בין פצדורות ....
+
+תפריט:
 msg :.ascii " \n the opsions are: "
 	.ascii"\n 1. Print metrix unsigned" 
 	.ascii"\n 2. Print metrix sing "
@@ -13,45 +18,512 @@ msg :.ascii " \n the opsions are: "
 	.ascii"\n 4. Negate a number in the matrix"
 	.ascii"\n 5. Swap numbers in the matrix"
 	.asciiz "\n 8. END"
+
+
+זה לאפשרות 1 -2 עם ההצגה , הרעיון הוא להציג כתובת עם 00 אם יש צורך באפסים ביצוג חיובי או שלילי , ובמידה והמספר גדול מ100 או קטן מ100- אז להציג אותו רגיל 
+
+
+zerozeroMinus:.asciiz "-00"
+zeroMinus:.asciiz "-0"
+zero:.asciiz"0"
+zerozero:.asciiz"00"
+
+כתובת של ירידה שורה וקווים להפריד בין השורות והמספרים 
 	
-                     ### add your data here ###
-                    
+space:.asciiz" | "
+line:.asciiz" \n" 
+
+הודעת שגיאה אם המספר לא נמצא בתפריט 
+
+Error:.asciiz "\n The number selected is not in range of the menu\n"
+הודעות לפונקציה GET POSSISION למציאת שורה ועמודה של המספר במטריצה:
+ 
+msg_get_Line:.asciiz "please enter the line of the metrix that the number is found: \n"
+msg_get_row:.asciiz "please enter the row of the metrix that the number is found: \n"               
+msg_Error_get:.asciiz "numbers out of the limit of the metrix  , please try again...\n" 
+הודעה לפונקציה של שינוי מספר במטריצה :
+msg_change_number:.asciiz "please enter the new number:\n" 
+msg_change_number_Error:.asciiz "number is out of the limit of a byte ,please try again...\n " 
+הודעות להחלפת מספרים מטריצה:                   
+msg_swap_number1:.asciiz "\nlets enter the place of number 1:\n"
+msg_swap_number2:.asciiz "\n lets enter the place of number 1:\n"
+
 ################# Code segment #####################
 .text
 .globl main
+Wrong:
+	li $v0,4
+	la $a0,Error
+	syscall	
+
 main:
 #menu #
 li $v0 , 4
 la $a0 , msg
 syscall 
+la $a0 , line
+syscall
 li $v0 , 5 
 syscall 
 move $a0 , $v0
-beq $a0 , 1 , GoToOpsion1
-beq $a0 , 2 , GoToOpsion2
-beq $a0 , 3 , GoToOpsion3
-beq $a0 , 4 , GoToOpsion4
-beq $a0 , 5 , GoToOpsion5
-GoToOpsion1:
-la $a1 , metrix
-jal print
+bgt $a0,8, Wrong
+blt $a0,1 ,Wrong
+פה אני עדכנתי את הכתובת לפי מה שמה שהמשתמש מזין להפניה מתאים לJUMP TABLE
+sll $s0,$a0,2 #the case address is in word  (sll2 4x)
+addi $s0,$s0,-4 #Start from zero
+la   $s1,jump_table #$s1=jump table address
+add  $s0,$s1,$s0 #the address of the selected case 
+lw  $s2,0($s0)#load the address of the slected case
+jalr  $s2	#link (PC+4-->$ra) +jr $s2
+
+לגבי כל המקרים: אני טוען למחסנית את הכתובת הקודמת שהייתי יחד עם הערכים הקודמים כשאני נכנס לפונקציה \ JUMP TABLE  
+ע"י הפקודות הבאות :
+addiu $sp,$sp,-4
+	sw $ra,0($sp)
+
+וחזרה לתפריט ע"י 
+lw $ra,0($sp)
+	addi $sp,$sp,4
+	jr $ra
 
 
-      ### remember: program always has to finish here ###
-li $v0, 10	# Exit program
+
+case_1:
+############### Print Marix Unsigned #########################
+מקרה ראשון - הדפסה Unsigned , יש טעינה של 1 באוגר A0 , טעינה של המטריצה בA1 וטעינה של 1  בA2 לשם הבדל בין מקרה 1 ל 2 
+
+
+	addiu $sp,$sp,-4
+	sw $ra,0($sp)
+	
+	#li $a0 , 1
+	la $a1 , matrix 
+	li $a2 , 1
+קריאת לפונקציה:
+	jal print
+	li $a0,'\n'
+	li $v0,11
+	syscall
+	
+	lw $ra,0($sp)
+	addi $sp,$sp,4
+	jr $ra
+###############################################################
+מקרה שני - הדפסה signed , יש טעינה של 1 באוגר A0 , טעינה של המטריצה בA1 וטעינה של 2 בA2 לשם הבדל בין מקרה 1 ל 2 
+case_2:
+	addiu $sp,$sp,-4
+	sw $ra,0($sp)
+	
+	#li $a0 , 2
+	la $a1 , matrix 
+	li $a2 , 2
+
+קריאת לפונקציה:
+	jal print
+	li $a0,'\n'
+	li $v0,11
+	syscall
+	
+	lw $ra,0($sp)
+	addi $sp,$sp,4
+	jr $ra
+
+###############################################################
+###############################################################
+case_3:
+מקרה שלוש ,  יש טעינה של 3 באוגר A0 , טעינה של המטריצה בA1 וטעינה של 1  A2 לשם הבדל בין מקרה 3,4,5
+	addiu $sp,$sp,-4
+	sw $ra,0($sp)
+	
+	#li $a0 , 3
+	la $a1 , matrix 
+	li $a2 , 1
+	jal get_position
+	li $a0,'\n'
+	li $v0,11
+	syscall
+	
+	lw $ra,0($sp)
+	addi $sp,$sp,4
+	jr $ra
+###############################################################
+###############################################################
+case_4:
+מקרה ארבע ,  יש טעינה של 4 באוגר A0 , טעינה של המטריצה בA1 וטעינה של 2 A2 לשם הבדל בין מקרה 3,4,5
+	addiu $sp,$sp,-4
+	sw $ra,0($sp)
+	
+	#li $a0 , 4
+	la $a1 , matrix 
+	li $a2 , 2
+	jal get_position
+	li $a0,'\n'
+	li $v0,11
+	syscall
+	
+	lw $ra,0($sp)
+	addi $sp,$sp,4
+	jr $ra
+###############################################################
+###############################################################
+case_5:
+מקרה חמש ,  יש טעינה של 5 באוגר A0 , טעינה של המטריצה בA1 וטעינה של 3  A2 לשם הבדל בין מקרה 3,4,5
+	addiu $sp,$sp,-4
+	sw $ra,0($sp)
+	
+	#li $a0 , 5
+	la $a0 ,msg_swap_number1
+	li $v0 , 4
+	syscall 
+	la $a1 , matrix 
+	li $a2 , 3
+	jal get_position
+	li $a0,'\n'
+	li $v0,11
+	syscall
+	
+	lw $ra,0($sp)
+	addi $sp,$sp,4
+	jr $ra
+###############################################################
+###############################################################
+exit:
+li $v0, 10	
 syscall
+
+# Exit program
+#########################################################################
+#########################################################################
+###########################
+## opsion 1 +2 , print metrix  unsigned / signed
+##########################
 print:
+#$a2 =  1 for unsigned 2 for signed
+
+##
+
 li $t2 , 0 #counter for line down
 li $t3 , 0 #counter for metrix total 
+move $t4 , $a2
 loop:
-beq $t2 , 4, print line
-lb $t1 , 0($a1)
+move $a2 ,$t4 עדכון של אוגר A2 לשם טעינת ביט כמו שרצו:
+beq $t3 , 16 , EndPro
+beq $t2 , 4, printline
+beq $a2 , 1 , unsigned
+beq $a2 , 2, signed
+unsigned:
+lbu  $t1 , 0($a1)
+j check
+signed:
+lb  $t1 , 0($a1)
+check:
+blt $t1  ,-99 , printNormal
+פה זה מעבר להדפסה של בין 99- בין 10- פשוט היה לי בלבול בקפיצה והייתי צריך לכתוב את זה אחרת 
+blt , $t1 , -10 , oo
+blt $t1 , 0,  printUntil0
 blt $t1 , 10 , printUntil10 
 blt $t1 , 100 , printUntil100
-printNormal
-move $a0 , $t1
-li $v0 , 1
-syscall
-addi $t1 , 1
-addi $ 
+printNormal:
+move $a0 , $t1 
+li $a2 , 1
+addiu $sp,$sp,-4
+sw $ra,0($sp)
+jal print_num
+
+addi $a1 ,$a1 ,1
+addi $t2 ,$t2 , 1
+addi $t3 ,$t3 , 1
+
 j loop
+printUntil0:
+lbu  $t1 , 0($a1)
+xor $t1 , 0xff
+addi $t1 , $t1 , 1
+הפקודות האלו בשביל להפוך 1- ל1 לדוגמא כדי להדפיס כמו שצריך 
+move $a0 , $t1 
+li $a2 , 4
+addiu $sp,$sp,-4
+sw $ra,0($sp)
+jal print_num
+
+addi $a1 ,$a1 ,1
+addi $t2 ,$t2 , 1
+addi $t3 ,$t3 , 1
+
+j loop
+
+oo:
+lbu  $t1 , 0($a1)
+xor $t1 , 0xff
+addi $t1 , $t1 , 1
+move $a0 , $t1 
+li $a2 , 5
+addiu $sp,$sp,-4
+sw $ra,0($sp)
+jal print_num
+
+addi $a1 ,$a1 ,1
+addi $t2 ,$t2 , 1
+addi $t3 ,$t3 , 1
+
+j loop
+printline:
+la ,$a0 , line
+li ,$v0 , 4
+syscall
+li $t2 , 0
+j loop
+
+printUntil100:
+move $a0 , $t1 
+li $a2 , 3
+addiu $sp,$sp,-4
+sw $ra,0($sp)
+jal print_num
+
+addi $a1 ,$a1 ,1
+addi $t2 ,$t2 , 1
+addi $t3 ,$t3 , 1
+
+j loop
+printUntil10:
+move $a0 , $t1 
+li $a2 , 2
+addiu $sp,$sp,-4
+sw $ra,0($sp)
+jal print_num
+addi $a1 ,$a1 ,1
+addi $t2 ,$t2 , 1
+addi $t3 ,$t3 , 1
+j loop
+EndPro:
+
+lw $ra,0($sp)
+addi $sp,$sp,4
+jal main
+
+##
+
+####################
+#print function (i dont know how to spell)
+####################
+
+print_num:
+addiu $sp,$sp,-4
+sw $ra,0($sp)
+#$a0 , the number you need to print 
+#$a2 , how to print (002/020/200)
+
+move $t1 , $a0
+beq $a2 , 3  , printNumberUntil100
+beq $a2 , 5 , printNumberWithMinusUntil100
+beq $a2 , 4 , printNumberWithMinusUntil10
+beq $a2 , 1, printNumberNormal
+beq $a2 , 2, printNumberUntil10
+#############
+printNumberWithMinusUntil100:
+la , $a0 ,zeroMinus
+li $v0 , 4
+syscall 
+move $a0 , $t1 
+li $v0 , 1
+syscall 
+la $a0 , space
+li $v0 , 4
+syscall
+lw $ra,0($sp)
+addi $sp,$sp,4
+jr $ra
+
+#############
+printNumberWithMinusUntil10:
+la , $a0 ,zerozeroMinus
+li $v0 , 4
+syscall 
+move $a0 , $t1 
+li $v0 , 1
+syscall 
+la $a0 , space
+li $v0 , 4
+syscall
+lw $ra,0($sp)
+addi $sp,$sp,4
+jr $ra
+
+#############
+#3
+printNumberUntil100:
+#############
+la , $a0 ,zero
+li $v0 , 4
+syscall 
+move $a0 , $t1 
+li $v0 , 1
+syscall 
+la $a0 , space
+li $v0 , 4
+syscall
+lw $ra,0($sp)
+addi $sp,$sp,4
+jr $ra
+#############
+printNumberUntil10:
+#############
+la , $a0 ,zerozero
+li $v0 , 4
+syscall 
+move $a0 , $t1 
+li $v0 , 1
+syscall 
+la $a0 , space
+li $v0 , 4
+syscall
+lw $ra,0($sp)
+addi $sp,$sp,4
+jr $ra
+#############
+printNumberNormal:
+#############
+move $a0 , $t1 
+li $v0 , 1
+syscall 
+la $a0 , space
+li $v0 , 4
+syscall
+lw $ra,0($sp)
+addi $sp,$sp,4
+jr $ra
+#############
+####################
+###################
+#opsion 3 , change Number###
+#& opsion 4,  negate
+## get function:####
+הפונקציה GET בשביל אופציה 3-5 , שכחתי לרשום שזה גם לאופציה חמש 
+get_position:
+
+addiu $sp,$sp,-4
+sw $ra,0($sp)
+
+loopERROR:
+li $v0  ,4 
+la $a0 , msg_get_Line
+syscall 
+li $v0 , 5
+syscall
+blt $v0 , 1, ERROR_get
+bgt $v0 , 4 ,ERROR_get
+move $t1 , $v0 ##$t1 to line
+move $t4 , $t1 ## saver for make the place 
+li $v0  ,4 
+la $a0 , msg_get_row
+syscall 
+li $v0 , 5
+syscall
+blt $v0 , 1, ERROR_get
+bgt $v0 , 4 ,ERROR_get
+move $t2 , $v0 ##$t2 to row
+j madePlace
+ERROR_get: 
+li $v0 , 4
+la $a0 ,msg_Error_get
+syscall 
+j loopERROR
+madePlace:
+addi $t1 , $t1 , -1
+addi $t2 , $t2 , -1
+li $t3 , 0
+loopmadePlace:
+beq $t3 , $t1 , EndFunctionGet
+addi $t5 , $t5 , 4
+addi $t3 , $t3 , 1
+j loopmadePlace
+
+EndFunctionGet:
+add $t5 , $t5 , $t2
+move $a1 , $t5
+li $v0 , 1
+move $a0 , $t5 
+syscall 
+
+beq $a2 , 1 , move_change_number
+beq $a2 , 2,  move_negate
+beq $a2 , 3, get_number2_for_swap
+##
+move_swap:
+addiu $sp,$sp,-4
+sw $ra,0($sp)
+jal swap
+##
+get_number2_for_swap:
+#$a1 -number 2 
+#$a2 - number 1 
+move $a2 , $a1 #save for later
+j get_position
+##
+move_change_number:
+addiu $sp,$sp,-4
+sw $ra,0($sp)
+jal change_number
+##
+move_negate:
+addiu $sp,$sp,-4
+sw $ra,0($sp)
+jal negate
+##############################
+###############################
+#change_number_Function:######
+change_number:
+#$a1  - the place in the metrix 
+addiu $sp,$sp,-4
+sw $ra,0($sp)
+move $t1 , $a0
+loopEROOR_change_number:
+li $v0 , 4
+la $a0 , msg_change_number
+syscall 
+li $v0 , 5
+syscall 
+blt $v0 ,-128 , Error_change_Number
+bgt $v0 , 127 , Error_change_Number
+j the_Change
+Error_change_Number:
+li $v0 , 4 
+la $a0 ,msg_change_number_Error
+syscall 
+j loopEROOR_change_number
+the_Change:
+
+sb $v0 , matrix($a1)
+lw $ra,0($sp)
+addi $sp,$sp,4
+jal main
+##############################
+###############################
+#negate_Function:######
+negate:
+#$a1  - the place in the metrix 
+addiu $sp,$sp,-4
+sw $ra,0($sp)
+lb $t1 , matrix($a1)
+xor $t1 , $t1 , 0xff
+addi $t1 , $t1 , 1
+sb $t1 , matrix($a1)
+lw $ra,0($sp)
+addi $sp,$sp,4
+jal main
+
+swap:
+#$a1 -number 2 
+#$a2 - number 1
+addiu $sp,$sp,-4
+sw $ra,0($sp)
+lb $t1 , matrix ($a2)
+lb $t2 , matrix ($a1) 
+sb $t1 , matrix ($a1)
+sb $t2 , matrix ($a2)
+
+
+lw $ra,0($sp)
+addi $sp,$sp,4
+jal main
